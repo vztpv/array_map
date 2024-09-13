@@ -127,6 +127,8 @@ namespace wiz {
 			long long count = 0;
 			long long dead_list = 0;
 
+			bool first_time = true;
+
 		public:
 			explicit RB_Tree() {  }
 			virtual ~RB_Tree() {
@@ -458,8 +460,10 @@ namespace wiz {
 
 				long long now = tree->arr.size(); //
 
-
 				if (!IsNULL(tree->root)) {
+					if (hint) {
+						x_idx = hint;
+					}
 					while (//!IsNULL(tree->arr[x_idx]) &&
 						!IsNULL(x_idx) //&& !hint
 						)
@@ -570,35 +574,22 @@ namespace wiz {
 				}
 			}
 		private:
-			class Range
-			{
-			public:
-				int left;
-				int right;
-				int hint;
-			public:
-				Range() { }
-				Range(int left, int right, int hint = 0) :
-					left(left), right(right), hint(hint)
-				{
-					//
-				}
-			};
 
-			void _test(long long left, long long right, long long hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec) {
+			void _test(long long left, long long right, long long hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec, bool use_hint = false) {
 				if (left > right) {
 					return;
 				}
 
 				long long middle = (left + right) / 2;
 
-				hint = INSERT(tree, std::move((*vec)[middle]), hint);
+				hint = INSERT(tree, std::move((*vec)[middle]), use_hint? hint : 0);
 
-				_test(left, middle - 1, hint, tree, vec);
-				_test(middle + 1, right, hint, tree, vec);
+				_test(left, middle - 1, hint, tree, vec, use_hint);
+				_test(middle + 1, right, hint, tree, vec, use_hint);
 			}
 
 			void REALINSERT(RB_Tree<Key, Data, COMP>* tree) {
+
 				if (tree->remain_list.empty()) {
 					return;
 				}
@@ -625,8 +616,14 @@ namespace wiz {
 				tree->remain_list.clear();
 
 				// remove dupplication? but no remove last dup?
-				_test(0, vec.size() - 1, 0, tree, &vec);
+				if (first_time) {
+					_test(0, vec.size() - 1, 0, tree, &vec, true);
+				}
+				else {
+					_test(0, vec.size() - 1, 0, tree, &vec, false);
+				}
 
+				first_time = false;
 				return;
 			}
 
