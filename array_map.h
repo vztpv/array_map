@@ -44,20 +44,22 @@ namespace wiz {
 
 	template <class Key, class Data>
 	class array_map {
-		typedef enum _Color { BLACK = 0, RED = 1 } Color;
+		typedef enum _Color : uint32_t { BLACK = 0, RED = 1 } Color;
+		
+		using array_map_int = int32_t;
 
 		template < class Key, class Data >
 		class RB_Node // no REMOVE method!
 		{
 		public:
-			long long id = 0; // NULL value? id == -1 ?
 			Key first;
 			Data second;
-			long long  left = 0;
-			long long  right = 0;
-			long long  p = 0; // parent
+			array_map_int id = 0; // NULL value? id == -1 ?
+			array_map_int  left = 0;
+			array_map_int  right = 0;
+			array_map_int  p = 0; // parent
 			Color color = BLACK;
-			long long next = 0; // for dead.. or remain.
+			array_map_int next = 0; // for dead.. or remain.
 			bool dead = false; //
 		public:
 			void Clear()
@@ -89,7 +91,7 @@ namespace wiz {
 		class TEST // need to rename!
 		{
 		public:
-			inline   long long operator()(const T& t1, const T& t2) const noexcept {
+			inline int operator()(const T& t1, const T& t2) const noexcept {
 				return test(t1, t2);
 			}
 		};
@@ -103,7 +105,7 @@ namespace wiz {
 			{
 				return x.id <= 0 || x.id > arr.size();
 			}
-			inline  bool IsNULL(const unsigned long long id) const noexcept
+			inline  bool IsNULL(const array_map_int id) const noexcept
 			{
 				return id <= 0 || id > arr.size();
 			}
@@ -123,9 +125,9 @@ namespace wiz {
 		private:
 			std::vector<std::pair<Key, Data>> remain_list;
 
-			long long root = 0;
-			long long count = 0;
-			long long dead_list = 0;
+			array_map_int root = 0;
+			array_map_int count = 0;
+			array_map_int dead_list = 0;
 
 			bool first_time = true;
 
@@ -227,7 +229,7 @@ namespace wiz {
 				COMP3 comp3;
 
 				while (!IsNULL(*x)) { // != nil
-					long long temp = comp3(k, x->first);
+					int temp = comp3(k, x->first);
 					if (temp < 0) { // k < x.key
 						x = &arr[x->left];
 					}
@@ -247,7 +249,7 @@ namespace wiz {
 			RB_Node<Key, Data>* SEARCH(RB_Node<Key, Data>* x, const Key& k)
 			{
 				COMP3 comp3;
-				//long long count = 0;
+				//array_map_int count = 0;
 				while (x->id) { // != nil
 					//count++;
 					int temp = comp3(k, x->first);
@@ -273,7 +275,7 @@ namespace wiz {
 				COMP3 comp3;
 
 				while (!IsNULL(*x)) { // != nil
-					long long temp = comp3(k, x->first);
+					int temp = comp3(k, x->first);
 					if (temp < 0) { // k < x.key
 						x = &arr[x->left];
 					}
@@ -295,7 +297,7 @@ namespace wiz {
 				COMP3 comp3;
 
 				while (!IsNULL(*x)) { // != nil
-					long long temp = comp3(k, x->first);
+					int temp = comp3(k, x->first);
 					if (temp < 0) { // k < x.key
 						x = &arr[x->left];
 					}
@@ -355,17 +357,17 @@ namespace wiz {
 				}
 				tree->arr[tree->root].color = BLACK;
 			}
-			long long INSERT(RB_Tree<Key, Data, COMP>* tree, const std::pair<Key, Data>& key, long long hint = 0)
+			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, const std::pair<Key, Data>& key, array_map_int hint = 0)
 			{
 				COMP comp;
 				COMP2 eq;
 				COMP3 comp3;
 
-				long long y_idx = 0;
-				long long x_idx = tree->root;
+				array_map_int y_idx = 0;
+				array_map_int x_idx = tree->root;
 				auto& chk = tree->arr;
 
-				long long now = tree->arr.size(); //
+				size_t now = tree->arr.size(); //
 
 
 				if (!IsNULL(tree->root)) {
@@ -374,7 +376,7 @@ namespace wiz {
 						)
 					{
 						y_idx = x_idx;
-						long long test = comp3(key.first, tree->arr[x_idx].first);
+						int test = comp3(key.first, tree->arr[x_idx].first);
 
 						if (test < 0)
 						{
@@ -408,8 +410,8 @@ namespace wiz {
 				else {
 					now = tree->dead_list;
 					tree->dead_list = tree->arr[now].next;
-					long long id = tree->arr[now].id;
-					long long next = tree->arr[now].next;
+					array_map_int id = tree->arr[now].id;
+					array_map_int next = tree->arr[now].next;
 
 					tree->arr[now].Clear();
 					tree->arr[now].id = id;
@@ -445,7 +447,7 @@ namespace wiz {
 
 				return z->id;
 			}
-			long long INSERT(RB_Tree<Key, Data, COMP>* tree, std::pair<Key, Data>&& key, long long hint = 0)
+			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, std::pair<Key, Data>&& key, array_map_int hint = 0)
 			{
 
 				//std::cout << "key " << key.first << " hint " << hint << " ";
@@ -454,11 +456,11 @@ namespace wiz {
 				COMP2 eq;
 				COMP3 comp3;
 
-				long long y_idx = 0;
-				long long x_idx = tree->root;
+				array_map_int y_idx = 0;
+				array_map_int x_idx = tree->root;
 				auto& chk = tree->arr;
 
-				long long now = tree->arr.size(); //
+				size_t now = tree->arr.size(); //
 
 				if (!IsNULL(tree->root)) {
 					if (hint) {
@@ -469,7 +471,7 @@ namespace wiz {
 						)
 					{
 						y_idx = x_idx;
-						long long test = comp3(key.first, tree->arr[x_idx].first);
+						int test = comp3(key.first, tree->arr[x_idx].first);
 
 						if (test < 0)
 						{
@@ -504,8 +506,8 @@ namespace wiz {
 				else {
 					now = tree->dead_list;
 					tree->dead_list = tree->arr[now].next;
-					long long id = tree->arr[now].id;
-					long long next = tree->arr[now].next;
+					array_map_int id = tree->arr[now].id;
+					array_map_int next = tree->arr[now].next;
 
 					tree->arr[now].Clear();
 					tree->arr[now].id = id;
@@ -575,12 +577,12 @@ namespace wiz {
 			}
 		private:
 
-			void _test(long long left, long long right, long long hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec, bool use_hint = false) {
+			void _test(int64_t left, int64_t right, int64_t hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec, bool use_hint = false) {
 				if (left > right) {
 					return;
 				}
 
-				long long middle = (left + right) / 2;
+				size_t middle = (left + right) / 2;
 
 				hint = INSERT(tree, std::move((*vec)[middle]), use_hint? hint : 0);
 
@@ -765,11 +767,11 @@ namespace wiz {
 				LAZYINSERT(this, std::move(key));
 			}
 			// insert, search, remove.
-			long long Insert(const std::pair<Key, Data>& key)
+			array_map_int Insert(const std::pair<Key, Data>& key)
 			{
 				return INSERT(this, key);
 			}
-			long long Insert(std::pair<Key, Data>&& key)
+			array_map_int Insert(std::pair<Key, Data>&& key)
 			{
 				return INSERT(this, key);
 			}
@@ -787,7 +789,7 @@ namespace wiz {
 			template <typename T> // T must be signed type!
 
 
-			RB_Node<Key, Data>* Search(const Key& key, long long* id = nullptr) {
+			RB_Node<Key, Data>* Search(const Key& key, array_map_int* id = nullptr) {
 				RB_Node<Key, Data>* x = &arr[root];
 
 
@@ -800,7 +802,7 @@ namespace wiz {
 				return x;
 			}
 
-			const RB_Node<Key, Data>* Search(const Key& key, long long* id = nullptr) const {
+			const RB_Node<Key, Data>* Search(const Key& key, array_map_int* id = nullptr) const {
 				const RB_Node<Key, Data>* x = &arr[root];
 
 				x = SEARCH(x, key);
@@ -812,7 +814,7 @@ namespace wiz {
 				return x;
 			}
 
-			RB_Node<Key, Data>* Search(Key&& key, long long* id = nullptr, Key* temp = nullptr) {
+			RB_Node<Key, Data>* Search(Key&& key, array_map_int* id = nullptr, Key* temp = nullptr) {
 				RB_Node<Key, Data>* x = SEARCH(&arr[root], std::move(key), temp);
 
 				if (nullptr != id) {
@@ -822,7 +824,7 @@ namespace wiz {
 				return x;
 			}
 
-			const RB_Node<Key, Data>* Search(Key&& key, long long* id = nullptr, Key* temp = nullptr) const {
+			const RB_Node<Key, Data>* Search(Key&& key, array_map_int* id = nullptr, Key* temp = nullptr) const {
 				RB_Node<Key, Data>* x = &arr[root];
 
 
@@ -871,10 +873,10 @@ namespace wiz {
 				}
 			}
 
-			Data& DataVal(long long idx) {
+			Data& DataVal(array_map_int idx) {
 				return arr[idx].second;
 			}
-			const Data& DataVal(long long idx) const {
+			const Data& DataVal(array_map_int idx) const {
 				return arr[idx].second;
 			}
 
@@ -883,11 +885,11 @@ namespace wiz {
 				return 0 == count;
 			}
 			bool empty() const { return IsEmpty(); }
-			long long GetCount() const
+			array_map_int GetCount() const
 			{
 				return count;
 			}
-			long long size() const { return count; }
+			array_map_int size() const { return count; }
 			void clear() {
 				Clear();
 			}
@@ -922,7 +924,7 @@ namespace wiz {
 		void clear() {
 			arr.clear();
 		}
-		void reserve(long long x) {
+		void reserve(array_map_int x) {
 			arr.reserve(x);
 		}
 	public:
@@ -949,7 +951,7 @@ namespace wiz {
 		iterator find(const Key& key) {
 			arr.RealInsert();
 
-			long long id;
+			array_map_int id;
 			const RB_Node<Key, Data>* x = arr.Search(key, &id);
 			if (0 == x->id) {
 				return arr.end();
@@ -962,7 +964,7 @@ namespace wiz {
 		const_iterator find(const Key& key) const {
 			arr.RealInsert();
 
-			long long id;
+			array_map_int id;
 			RB_Node<Key, Data>* x = arr.Search(key, &id);
 			if (0 == x->id) {
 				return arr.end();
@@ -972,7 +974,7 @@ namespace wiz {
 		iterator find(Key&& key) {
 			arr.RealInsert();
 
-			long long id;
+			array_map_int id;
 			RB_Node<Key, Data>* x = arr.Search(std::move(key), &id);
 			if (0 == x->id) {
 				return arr.end();
@@ -982,7 +984,7 @@ namespace wiz {
 		const_iterator find(Key&& key) const {
 			arr.RealInsert();
 
-			long long id;
+			array_map_int id;
 			RB_Node<Key, Data>* x = arr.Search(std::move(key), &id);
 			if (0 == x->id) {
 				return arr.end();
@@ -991,7 +993,7 @@ namespace wiz {
 		}
 
 	public:
-		// different polong long compared by std::map?
+		// different poarray_map_int compared by std::map?
 		void insert(const std::pair<Key, Data>& value) {
 			lazy_insert(value);
 
@@ -1048,7 +1050,7 @@ namespace wiz {
 			RB_Node<Key, Data>* idx = arr.Search(key);
 
 			if (0 == idx->id) {
-				long long _idx = arr.Insert(std::pair<Key, Data>(key, Data())); //// return positon? - to do
+				array_map_int _idx = arr.Insert(std::pair<Key, Data>(key, Data())); //// return positon? - to do
 				return arr.DataVal(_idx);
 			}
 			else {
@@ -1061,7 +1063,7 @@ namespace wiz {
 
 			RB_Node<Key, Data>* idx = arr.Search(key);
 			if (0 == idx->id) {
-				//long long _idx = arr.Insert(wiz::Pair<Key, Data>(key, Data())); //// return positon? - to do
+				//array_map_int _idx = arr.Insert(wiz::Pair<Key, Data>(key, Data())); //// return positon? - to do
 				//return arr.DataVal(_idx);
 				throw "do not exist in array_map";
 			}
@@ -1076,7 +1078,7 @@ namespace wiz {
 
 			RB_Node<Key, Data>* idx = arr.Search(std::move(key), nullptr, &temp);
 			if (0 == idx->id) {
-				long long _idx = arr.Insert(std::pair<Key, Data>(std::move(temp), Data())); //// return positon? - to do
+				array_map_int _idx = arr.Insert(std::pair<Key, Data>(std::move(temp), Data())); //// return positon? - to do
 				return arr.DataVal(_idx);
 			}
 			else {
@@ -1089,7 +1091,7 @@ namespace wiz {
 
 			RB_Node<Key, Data>* idx = arr.Search(std::move(key));
 			if (0 == idx->id) {
-				//long long _idx = arr.Insert(wiz::Pair<Key, Data>(std::move(key), Data())); //// return positon? - to do
+				//array_map_int _idx = arr.Insert(wiz::Pair<Key, Data>(std::move(key), Data())); //// return positon? - to do
 				//return arr.Idx(_idx).second;
 				throw "do not exist in array_map";
 			}
