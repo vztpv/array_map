@@ -44,9 +44,9 @@ namespace wiz {
 
 	template <class Key, class Data>
 	class array_map {
-		typedef enum _Color : uint32_t { BLACK = 0, RED = 1 } Color;
+		typedef enum _Color : uint8_t { BLACK = 0, RED = 1 } Color;
 		
-		using array_map_int = int32_t;
+		using array_map_int = uint64_t;
 
 		template < class Key, class Data >
 		class RB_Node // no REMOVE method!
@@ -55,12 +55,10 @@ namespace wiz {
 			Key first;
 			Data second;
 			array_map_int id = 0; // NULL value? id == -1 ?
-			array_map_int  left = 0;
-			array_map_int  right = 0;
-			array_map_int  p = 0; // parent
+			array_map_int left = 0;
+			array_map_int right = 0;
+			array_map_int p = 0; // parent
 			Color color = BLACK;
-			array_map_int next = 0; // for dead.. or remain.
-			bool dead = false; //
 		public:
 			void Clear()
 			{
@@ -71,8 +69,6 @@ namespace wiz {
 				right = 0;
 				p = 0;
 				color = RED;
-				next = 0;
-				dead = false;
 			}
 		public:
 			explicit RB_Node(const Key& key = Key(), const Data& data = Data()) : first(key), second(data), color(BLACK) { }
@@ -124,23 +120,28 @@ namespace wiz {
 			std::vector<RB_Node<Key, Data>> arr = { RB_Node<Key, Data>() };
 		private:
 			std::vector<std::pair<Key, Data>> remain_list;
-
+			std::vector<uint8_t> dead;
+			std::vector<array_map_int> next;
 			array_map_int root = 0;
 			array_map_int count = 0;
 			array_map_int dead_list = 0;
-
+			
 			bool first_time = true;
 
 		public:
 			explicit RB_Tree() {  }
-			virtual ~RB_Tree() {
+			~RB_Tree() {
 				//
 			}
 			void reserve(size_t num) {
 				arr.reserve(num + 1);
+				dead.reserve(num + 1);
+				next.reserve(num + 1);
 				//remain_list.reserve(num);
 			}
-
+			void reserve_remain(size_t num) {
+				remain_list.reserve(num);
+			}
 			using iterator = typename std::vector<RB_Node<Key, Data>>::iterator;
 			using const_iterator = typename std::vector<RB_Node<Key, Data>>::const_iterator;
 
@@ -371,6 +372,10 @@ namespace wiz {
 
 
 				if (!IsNULL(tree->root)) {
+					if (hint) {
+						x_idx = hint;
+					}
+
 					while (//!IsNULL(tree->arr[x_idx]) &&
 						!IsNULL(x_idx) //&& !hint
 						)
@@ -401,6 +406,8 @@ namespace wiz {
 
 				if (0 == tree->dead_list) {
 					tree->arr.push_back(RB_Node<Key, Data>());
+					tree->dead.push_back(0);
+					tree->next.push_back(0);
 					tree->arr.back().id = now;
 					tree->arr.back().first = std::move(key.first);
 					tree->arr.back().second = std::move(key.second);
@@ -409,16 +416,16 @@ namespace wiz {
 				}
 				else {
 					now = tree->dead_list;
-					tree->dead_list = tree->arr[now].next;
+					tree->dead_list = tree->next[now];
 					array_map_int id = tree->arr[now].id;
-					array_map_int next = tree->arr[now].next;
+					array_map_int next = tree->next[now];
 
 					tree->arr[now].Clear();
 					tree->arr[now].id = id;
 					tree->arr[now].first = std::move(key.first);
 					tree->arr[now].second = std::move(key.second);
-					tree->arr[now].next = next;
-					tree->arr[now].dead = false;
+					tree->next[now] = next;
+					tree->dead[now] = false;
 
 					z = &(tree->arr[now]);
 				}
@@ -497,6 +504,8 @@ namespace wiz {
 
 				if (0 == tree->dead_list) {
 					tree->arr.push_back(RB_Node<Key, Data>());
+					tree->dead.push_back(0);
+					tree->next.push_back(0);
 					tree->arr.back().id = now;
 					tree->arr.back().first = std::move(key.first);
 					tree->arr.back().second = std::move(key.second);
@@ -505,16 +514,16 @@ namespace wiz {
 				}
 				else {
 					now = tree->dead_list;
-					tree->dead_list = tree->arr[now].next;
+					tree->dead_list = tree->next[now];
 					array_map_int id = tree->arr[now].id;
-					array_map_int next = tree->arr[now].next;
+					array_map_int next = tree->next[now];
 
 					tree->arr[now].Clear();
 					tree->arr[now].id = id;
 					tree->arr[now].first = std::move(key.first);
 					tree->arr[now].second = std::move(key.second);
-					tree->arr[now].next = next;
-					tree->arr[now].dead = false;
+					tree->next[now] = next;
+					tree->dead[now] = false;
 
 					z = &(tree->arr[now]);
 				}
@@ -926,6 +935,9 @@ namespace wiz {
 		}
 		void reserve(array_map_int x) {
 			arr.reserve(x);
+		}
+		void reserve2(array_map_int x) {
+			arr.reserve_remain(x);
 		}
 	public:
 		iterator begin() {
