@@ -36,6 +36,7 @@ int main(void)
 
 		int a = clock();
 		wiz::array_map<int, int> map;
+		map.reserve2(x.size());
 		for (int i = 0; i < x.size(); ++i) {
 			map.lazy_insert(std::make_pair(x[i], x[i] + 1));
 			//map[x[i]];
@@ -116,7 +117,7 @@ int main(void)
 		}
 		b = clock();
 
-		std::cout << "std::map random_serach ";
+		std::cout << "std::map random_search ";
 		std::cout << b - a << "ms\n";
 		std::cout << "------------------------\n";
 
@@ -169,7 +170,7 @@ int main(void)
 			}
 			b = clock();
 
-			std::cout << "std::map random_serach ";
+			std::cout << "std::map random_search ";
 			std::cout << b - a << "ms\n";
 			std::cout << "------------------------\n";
 		}

@@ -125,9 +125,9 @@ namespace wiz {
 			array_map_int root = 0;
 			array_map_int count = 0;
 			array_map_int dead_list = 0;
-			
+			array_map_int max_idx = 0;
+			array_map_int min_idx = 0;
 			bool first_time = true;
-
 		public:
 			explicit RB_Tree() {  }
 			~RB_Tree() {
@@ -358,7 +358,7 @@ namespace wiz {
 				}
 				tree->arr[tree->root].color = BLACK;
 			}
-			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, const std::pair<Key, Data>& key, array_map_int hint = 0)
+			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, const std::pair<Key, Data>& key, array_map_int hint)
 			{
 				COMP comp;
 				COMP2 eq;
@@ -370,8 +370,143 @@ namespace wiz {
 
 				size_t now = tree->arr.size(); //
 
+				int select = 0; // 0 : nothing, 1: min, 2: max
 
 				if (!IsNULL(tree->root)) {
+					if (hint) {
+						x_idx = hint;
+					}
+					else {
+						if (tree->arr[min_idx].first > key.first) {
+							select = 1;
+							hint = min_idx;
+						}
+						else if (tree->arr[max_idx].first < key.first) {
+							select = 2;
+							hint = max_idx;
+						}
+					}
+
+					if (hint) {
+						x_idx = hint;
+					}
+
+					while (//!IsNULL(tree->arr[x_idx]) &&
+						!IsNULL(x_idx) //&& !hint
+						)
+					{
+						y_idx = x_idx;
+						int test = comp3(key.first, tree->arr[x_idx].first);
+
+						if (test < 0)
+						{
+							x_idx = tree->arr[x_idx].left;
+						}
+						else if (test > 0) {
+							x_idx = tree->arr[x_idx].right;
+						}
+						else {
+							break;
+						}
+					}
+
+					if (!IsNULL(x_idx) && eq(key.first, tree->arr[x_idx].first)) {
+						tree->arr[x_idx].first = (key.first);
+						tree->arr[x_idx].second = (key.second);
+						return x_idx;
+					}
+				}
+				else {
+					min_idx = now;
+					max_idx = now;
+				}
+
+				RB_Node<Key, Data>* z = nullptr;
+				if (0 == tree->dead_list) {
+					tree->arr.push_back(RB_Node<Key, Data>());
+					tree->dead.push_back(0);
+					tree->next.push_back(0);
+					tree->arr.back().id = now;
+					tree->arr.back().first = (key.first);
+					tree->arr.back().second = (key.second);
+
+					z = &(tree->arr.back());
+				}
+				else {
+					now = tree->dead_list;
+					tree->dead_list = tree->next[now];
+					array_map_int id = tree->arr[now].id;
+					array_map_int next = tree->next[now];
+
+					tree->arr[now].Clear();
+					tree->arr[now].id = id;
+					tree->arr[now].first = (key.first);
+					tree->arr[now].second = (key.second);
+					tree->next[now] = next;
+					tree->dead[now] = false;
+
+					z = &(tree->arr[now]);
+				}
+
+				z->p = tree->arr[y_idx].id;
+
+				if (IsNULL(tree->arr[y_idx])) {
+					tree->root = z->id;
+				}
+				else if (comp(z->first, tree->arr[y_idx].first)) { // comp3? 
+					tree->arr[y_idx].left = z->id;//
+				}
+				else {
+					tree->arr[y_idx].right = z->id;//
+				}
+
+				z->left = 0; // = nil
+				z->right = 0;
+				z->color = RED; // = RED
+
+				// insert fixup
+				INSERT_FIXUP(tree, z);
+
+				count++;
+
+				if (select == 1) {
+					min_idx = z->id;
+				}
+				else if (select == 2) {
+					max_idx = z->id;
+				}
+				return z->id;
+			}
+			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, std::pair<Key, Data>&& key, array_map_int hint)
+			{
+
+				COMP comp;
+				COMP2 eq;
+				COMP3 comp3;
+
+				array_map_int y_idx = 0;
+				array_map_int x_idx = tree->root;
+				auto& chk = tree->arr;
+
+				size_t now = tree->arr.size(); //
+
+				int select = 0; // 0 : nothing, 1: min, 2: max
+
+				if (!IsNULL(tree->root)) {
+					if (hint) {
+						x_idx = hint;
+					}
+					else {
+						if (tree->arr[min_idx].first > key.first) {
+							select = 1;
+							hint = min_idx;
+						}
+						else if (tree->arr[max_idx].first < key.first) {
+							select = 2;
+							hint = max_idx;
+						}
+					}
+
 					if (hint) {
 						x_idx = hint;
 					}
@@ -401,9 +536,12 @@ namespace wiz {
 						return x_idx;
 					}
 				}
+				else {
+					min_idx = now;
+					max_idx = now;
+				}
 
 				RB_Node<Key, Data>* z = nullptr;
-
 				if (0 == tree->dead_list) {
 					tree->arr.push_back(RB_Node<Key, Data>());
 					tree->dead.push_back(0);
@@ -439,7 +577,6 @@ namespace wiz {
 					tree->arr[y_idx].left = z->id;//
 				}
 				else {
-
 					tree->arr[y_idx].right = z->id;//
 				}
 
@@ -452,104 +589,12 @@ namespace wiz {
 
 				count++;
 
-				return z->id;
-			}
-			array_map_int INSERT(RB_Tree<Key, Data, COMP>* tree, std::pair<Key, Data>&& key, array_map_int hint = 0)
-			{
-
-				//std::cout << "key " << key.first << " hint " << hint << " ";
-
-				COMP comp;
-				COMP2 eq;
-				COMP3 comp3;
-
-				array_map_int y_idx = 0;
-				array_map_int x_idx = tree->root;
-				auto& chk = tree->arr;
-
-				size_t now = tree->arr.size(); //
-
-				if (!IsNULL(tree->root)) {
-					if (hint) {
-						x_idx = hint;
-					}
-					while (//!IsNULL(tree->arr[x_idx]) &&
-						!IsNULL(x_idx) //&& !hint
-						)
-					{
-						y_idx = x_idx;
-						int test = comp3(key.first, tree->arr[x_idx].first);
-
-						if (test < 0)
-						{
-							x_idx = tree->arr[x_idx].left;
-						}
-						else if (test > 0) {
-							x_idx = tree->arr[x_idx].right;
-						}
-						else {
-							break;
-						}
-					}
-
-
-					if (!IsNULL(x_idx) && eq(key.first, tree->arr[x_idx].first)) {
-						tree->arr[x_idx].first = std::move(key.first);
-						tree->arr[x_idx].second = std::move(key.second);
-						return x_idx;
-					}
+				if (select == 1) {
+					min_idx = z->id;
 				}
-
-				RB_Node<Key, Data>* z = nullptr;
-
-				if (0 == tree->dead_list) {
-					tree->arr.push_back(RB_Node<Key, Data>());
-					tree->dead.push_back(0);
-					tree->next.push_back(0);
-					tree->arr.back().id = now;
-					tree->arr.back().first = std::move(key.first);
-					tree->arr.back().second = std::move(key.second);
-
-					z = &(tree->arr.back());
+				else if (select == 2) {
+					max_idx = z->id;
 				}
-				else {
-					now = tree->dead_list;
-					tree->dead_list = tree->next[now];
-					array_map_int id = tree->arr[now].id;
-					array_map_int next = tree->next[now];
-
-					tree->arr[now].Clear();
-					tree->arr[now].id = id;
-					tree->arr[now].first = std::move(key.first);
-					tree->arr[now].second = std::move(key.second);
-					tree->next[now] = next;
-					tree->dead[now] = false;
-
-					z = &(tree->arr[now]);
-				}
-
-				z->p = tree->arr[y_idx].id;
-
-				if (IsNULL(tree->arr[y_idx])) {
-					tree->root = z->id;
-				}
-				else if (comp(z->first, tree->arr[y_idx].first)) {
-					tree->arr[y_idx].left = z->id;//
-				}
-				else {
-					tree->arr[y_idx].right = z->id;//
-				}
-
-				z->left = 0; // = nil
-				z->right = 0;
-				z->color = RED; // = RED
-
-				// insert fixup
-				INSERT_FIXUP(tree, z);
-
-				count++;
-
-				//std::cout << "id " << z->id << "\n";
 				return z->id;
 			}
 			void LAZYINSERT(RB_Tree<Key, Data, COMP>* tree, const std::pair<Key, Data>& key) {
@@ -586,17 +631,23 @@ namespace wiz {
 			}
 		private:
 
-			void _test(int64_t left, int64_t right, int64_t hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec, bool use_hint = false) {
+			void _test(int64_t left, int64_t right, int64_t hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec) {
 				if (left > right) {
 					return;
 				}
 
 				size_t middle = (left + right) / 2;
 
-				hint = INSERT(tree, std::move((*vec)[middle]), use_hint? hint : 0);
+				hint = INSERT(tree, std::move((*vec)[middle]), hint);
 
-				_test(left, middle - 1, hint, tree, vec, use_hint);
-				_test(middle + 1, right, hint, tree, vec, use_hint);
+				_test(left, middle - 1, hint, tree, vec);
+				_test(middle + 1, right, hint, tree, vec);
+			}
+			// [left, right) ?
+			void _test2(int64_t left, int64_t right, int64_t hint, RB_Tree<Key, Data, COMP>* tree, std::vector<std::pair<Key, Data>>* vec) {
+				for (int64_t i = left; i < right; ++i) {
+					INSERT(tree, std::move((*vec)[i]), 0);
+				}
 			}
 
 			void REALINSERT(RB_Tree<Key, Data, COMP>* tree) {
@@ -626,15 +677,15 @@ namespace wiz {
 				}
 				tree->remain_list.clear();
 
-				// remove dupplication? but no remove last dup?
+				// 
 				if (first_time) {
-					_test(0, vec.size() - 1, 0, tree, &vec, true);
+					_test(0, vec.size() - 1, 0, tree, &vec);
 				}
 				else {
-					_test(0, vec.size() - 1, 0, tree, &vec, false);
+					_test2(0, vec.size(), 0, tree, &vec);
 				}
-
 				first_time = false;
+
 				return;
 			}
 
@@ -778,11 +829,11 @@ namespace wiz {
 			// insert, search, remove.
 			array_map_int Insert(const std::pair<Key, Data>& key)
 			{
-				return INSERT(this, key);
+				return INSERT(this, key, 0);
 			}
 			array_map_int Insert(std::pair<Key, Data>&& key)
 			{
-				return INSERT(this, key);
+				return INSERT(this, key, 0);
 			}
 
 			bool IsExist(const Key& key) const
